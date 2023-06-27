@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: A simple serverless user management application
+
+Resources:
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Users
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  BatchOperationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: BatchOperations
+      AttributeDefinitions:
+        - AttributeName: BatchId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: BatchId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  UserQueue:
+    Type: AWS::SQS::Queue
+
+  CreateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: create_user.lambda_handler
+      Runtime: python3.8
+      CodeUri: s3://<your-bucket-name>/create_user.zip
+      Events:
+        CreateUser:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: POST
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref UsersTable
+
+  GetUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: get_user.lambda_handler
+      Runtime: python3.8
+      CodeUri: s3://<your-bucket-name>/get_user.zip
+      Events:
+        GetUser:
+          Type: Api
+          Properties:
+            Path: /users/{id}
+            Method: GET
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref UsersTable
+
+  UpdateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: update_user.lambda_handler
+      Runtime: python3.8
+      CodeUri: s3://<your-bucket-name>/update_user.zip
+      Events:
+        UpdateUser:
+          Type: Api
+          Properties:
+            Path: /users/{id}
+            Method: PUT
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref UsersTable
+
+  DeleteUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: delete_user.lambda_handler
+      Runtime: python3.8
+      CodeUri: s3://<your-bucket-name>/delete_user.zip
+      Events:
+        DeleteUser:
+          Type: Api
+          Properties:
+            Path: /users/{id}
+            Method: DELETE
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref UsersTable
+
+  BulkOperationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bulk_operations.lambda_handler
+      Runtime: python3.8
+      CodeUri: s3://<your-bucket-name>/bulk_operations.zip
+      Environment:
+        Variables:
+          DYNAMODB_BATCH_TABLE: !Ref BatchOperationsTable
+          SQS_QUEUE_URL: !GetAtt UserQueue.Arn
+      Events:
+        S3Trigger:
+          Type: S3
+          Properties:
+            Bucket: !Ref UserUploadBucket
+            Events: s3:ObjectCreated:*
+
+Outputs:
+  UserAPI:
+    Description: URL of the API endpoint
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}
