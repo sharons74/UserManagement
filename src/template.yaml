@@ -6,7 +6,7 @@ Resources:
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: Users
+      TableName: AkaUsers
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
@@ -20,7 +20,7 @@ Resources:
   BatchOperationsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: BatchOperations
+      TableName: AkaBatchOperations
       AttributeDefinitions:
         - AttributeName: BatchId
           AttributeType: S
@@ -33,13 +33,20 @@ Resources:
 
   UserQueue:
     Type: AWS::SQS::Queue
+    Properties:
+      QueueName: AkaUserQueue
+
+  BatchUploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: aka-batch-upload
 
   CreateUserFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: create_user.lambda_handler
       Runtime: python3.8
-      CodeUri: s3://<your-bucket-name>/create_user.zip
+      CodeUri: ./services/create_user.py
       Events:
         CreateUser:
           Type: Api
@@ -55,7 +62,7 @@ Resources:
     Properties:
       Handler: get_user.lambda_handler
       Runtime: python3.8
-      CodeUri: s3://<your-bucket-name>/get_user.zip
+      CodeUri: s3://aka-lambda-functions/services.zip
       Events:
         GetUser:
           Type: Api
@@ -71,7 +78,7 @@ Resources:
     Properties:
       Handler: update_user.lambda_handler
       Runtime: python3.8
-      CodeUri: s3://<your-bucket-name>/update_user.zip
+      CodeUri: s3://aka-lambda-functions/services.zip
       Events:
         UpdateUser:
           Type: Api
@@ -87,7 +94,7 @@ Resources:
     Properties:
       Handler: delete_user.lambda_handler
       Runtime: python3.8
-      CodeUri: s3://<your-bucket-name>/delete_user.zip
+      CodeUri: s3://aka-lambda-functions/services.zip
       Events:
         DeleteUser:
           Type: Api
@@ -103,7 +110,7 @@ Resources:
     Properties:
       Handler: bulk_operations.lambda_handler
       Runtime: python3.8
-      CodeUri: s3://<your-bucket-name>/bulk_operations.zip
+      CodeUri: s3://aka-lambda-functions/services.zip
       Environment:
         Variables:
           DYNAMODB_BATCH_TABLE: !Ref BatchOperationsTable
@@ -112,10 +119,44 @@ Resources:
         S3Trigger:
           Type: S3
           Properties:
-            Bucket: !Ref UserUploadBucket
+            Bucket: !Ref BatchUploadBucket
             Events: s3:ObjectCreated:*
+
+  ProcessUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ProcessUserFunction
+      CodeUri: s3://aka-lambda-functions/services.zip
+      Handler: process_user.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          QueueUrl: !Ref UserQueue
+          TableName: !Ref UsersTable
+      Events:
+        ProcessUserEvent:
+          Type: SQS
+          Properties:
+            Queue: !Ref UserQueue
+
+  UploadToS3Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: UploadToS3Function
+      CodeUri: s3://aka-lambda-functions/services.zip
+      Handler: upload_to_s3.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          BucketName: !Ref BatchUploadBucket
+      Events:
+        UploadToS3Api:
+          Type: Api
+          Properties:
+            Path: /users/upload
+            Method: post
 
 Outputs:
   UserAPI:
     Description: URL of the API endpoint
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}"
