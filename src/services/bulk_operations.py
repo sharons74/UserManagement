@@ -30,7 +30,7 @@ def lambda_handler(event, context):
         total = 0
 
         # Fetch operation and callbackURL from DynamoDB table
-        batch_table = dynamodb.Table("BulkUsersManagementTable")
+        batch_table = dynamodb.Table("AkaBatchOperations")
         batch_item = batch_table.get_item(Key={'BatchId': batch_id})['Item']
         operation = batch_item['Operation']
 

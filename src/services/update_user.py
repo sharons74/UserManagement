@@ -26,7 +26,7 @@ def lambda_handler(event, context):
     email = body.get("email")
     password = body.get("password")  # Please remember to hash passwords before storing!
 
-    table = dynamodb.Table('Users')
+    table = dynamodb.Table('AkaUsers')
 
     try:
         # Update the user details in the DynamoDB table

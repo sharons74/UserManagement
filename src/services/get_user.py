@@ -17,7 +17,7 @@ def lambda_handler(event, context):
             'body': json.dumps({"message": "id is required"})
         }
 
-    table = dynamodb.Table('Users')
+    table = dynamodb.Table('AkaUsers')
 
     try:
         # Get the user details from the DynamoDB table

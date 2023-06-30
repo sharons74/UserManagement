@@ -27,7 +27,7 @@ def lambda_handler(event, context):
         )
 
         # Store the operation type and callback URL in DynamoDB
-        table = dynamodb.Table("BulkUsersManagementTable")
+        table = dynamodb.Table("AkaBatchOperations")
         table.put_item(
             Item={
                 'BatchId': batch_id,

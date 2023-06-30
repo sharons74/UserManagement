@@ -45,8 +45,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: create_user.lambda_handler
-      Runtime: python3.8
-      CodeUri: ./services/create_user.py
+      Runtime: python3.9
+      CodeUri: ./services
       Events:
         CreateUser:
           Type: Api
@@ -61,8 +61,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: get_user.lambda_handler
-      Runtime: python3.8
-      CodeUri: s3://aka-lambda-functions/services.zip
+      Runtime: python3.9
+      CodeUri: ./services
       Events:
         GetUser:
           Type: Api
@@ -77,8 +77,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: update_user.lambda_handler
-      Runtime: python3.8
-      CodeUri: s3://aka-lambda-functions/services.zip
+      Runtime: python3.9
+      CodeUri: ./services
       Events:
         UpdateUser:
           Type: Api
@@ -93,8 +93,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: delete_user.lambda_handler
-      Runtime: python3.8
-      CodeUri: s3://aka-lambda-functions/services.zip
+      Runtime: python3.9
+      CodeUri: ./services
       Events:
         DeleteUser:
           Type: Api
@@ -109,8 +109,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: bulk_operations.lambda_handler
-      Runtime: python3.8
-      CodeUri: s3://aka-lambda-functions/services.zip
+      Runtime: python3.9
+      CodeUri: ./services
       Environment:
         Variables:
           DYNAMODB_BATCH_TABLE: !Ref BatchOperationsTable
@@ -126,9 +126,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: ProcessUserFunction
-      CodeUri: s3://aka-lambda-functions/services.zip
+      CodeUri: ./services
       Handler: process_user.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.9
       Environment:
         Variables:
           QueueUrl: !Ref UserQueue
@@ -143,9 +143,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: UploadToS3Function
-      CodeUri: s3://aka-lambda-functions/services.zip
+      CodeUri: ./services
       Handler: upload_to_s3.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.9
       Environment:
         Variables:
           BucketName: !Ref BatchUploadBucket

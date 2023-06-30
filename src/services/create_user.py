@@ -42,7 +42,7 @@ def lambda_handler(event, context):
     # Generate a unique id for the new user
     id = str(uuid.uuid4())
 
-    table = dynamodb.Table('Users')
+    table = dynamodb.Table('AkaUsers')
 
     try:
         # Put the user details into the DynamoDB table

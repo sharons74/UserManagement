@@ -17,7 +17,7 @@ def lambda_handler(event, context):
             'body': json.dumps({"message": "id is required"})
         }
 
-    table = dynamodb.Table('Users')
+    table = dynamodb.Table('AkaUsers')
 
     try:
         # Delete the user from the DynamoDB table
